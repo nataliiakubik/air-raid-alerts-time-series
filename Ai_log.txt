@@ -1,0 +1,2904 @@
+Hiiii
+I have  a couple of hours to produce a small python project on Time Series Analysis of Air Raid Alerts in Ukraine
+The organisers allow data analysis, forecasting, visualisation, or another reasonable approach(so no limitations). I will work in Google Colab 
+Before writing code, please propose 2–3 ideas that can realistically be completed in about four hours(so no full scale projects that can take weeks). For each idea explain the main research question/ what data would be required /the expected outputs/the main methodological risks/why it would be useful or interesting.
+Please prioritise a small, complete and reproducible project over a complex forecasting model. Do not write code yet!!!
+
+I’ll first check what alert datasets are currently accessible and then shape the ideas around what can actually be completed reproducibly in Colab within four hours.
+
+Думал на протяжении 18s
+
+Hiiii! For a four-hour Colab project, the main challenge is not sophisticated modelling. It is choosing one clear unit of analysis, cleaning alert intervals correctly, and producing a small set of interpretable results.
+
+A practical data source is the public Ukrainian Air Raid Sirens Dataset on GitHub. It provides event-level CSV files with region, alert start, and alert end times and is updated regularly. The official data begin on 15 March 2022, while the volunteer dataset begins on 25 February 2022. Times are stored in UTC. One important complication is that, since December 2025, official alerts have increasingly been recorded at the raion rather than oblast level, so an oblast-level analysis should either use a fixed earlier cutoff or carefully harmonise the geography.
+
+Idea 1. How has the alert burden changed over time in selected oblasts?
+Main research question
+
+How have the frequency and total duration of air raid alerts changed over time, and do the patterns differ between selected Ukrainian oblasts?
+
+Instead of analysing every region, choose three contrasting oblasts, for example:
+
+Zakarpattia or Lviv as a western region
+Kyiv or Kyiv Oblast as a central region
+Kharkiv, Dnipropetrovsk, or Zaporizhzhia as a more frequently affected eastern or southeastern region
+
+The project would remain a genuine time-series analysis while avoiding a large nationwide comparison.
+
+Data required
+
+Event-level records containing:
+
+oblast or region
+alert start timestamp
+alert end timestamp
+possibly alert type or source
+optionally an indicator for incomplete or estimated alerts
+
+From each alert, calculate its duration. Then aggregate by day or week:
+
+number of alerts
+total minutes under alert
+median alert duration
+proportion of days containing at least one alert
+
+Weekly aggregation will probably produce cleaner and more readable plots than daily aggregation.
+
+Expected outputs
+
+A compact finished project could contain:
+
+A cleaned event-level dataset.
+A weekly time series of total alert hours for each selected oblast.
+A second plot showing weekly alert counts.
+A rolling four-week average to make long-term changes visible.
+A heatmap with months as rows and years as columns, or a calendar-style heatmap for one region.
+A brief comparison identifying periods with the greatest alert burden.
+
+A particularly effective final figure would be a line plot with three regional time series using the same vertical scale.
+
+Main methodological risks
+
+Alert count and alert burden are different. Ten short alerts and one ten-hour alert should not be interpreted as equivalent. Therefore, report both frequency and total duration.
+
+Alerts crossing midnight require special handling. Simply assigning the whole duration to the starting date would overestimate one day and underestimate the next. For a very small project, this can be acknowledged as a limitation or handled by splitting intervals at midnight.
+
+Regions cannot automatically be interpreted as having different levels of actual danger. Alert policies, proximity to threats, available information, and administrative decisions also affect when alerts are declared.
+
+Geographic definitions changed. The shift toward raion-level alerts after December 2025 can create an artificial break in an oblast-level series. Restricting the analysis to 15 March 2022 through 30 November 2025 would make the dataset more internally consistent.
+
+Why it is useful or interesting
+
+This is probably the safest and most complete four-hour option. It has a clear question, understandable metrics, attractive visualisations, and does not depend on a model working successfully.
+
+It also produces a meaningful distinction between:
+
+how often alerts occur
+how long people remain under alert
+how patterns differ geographically
+how alert burden evolves over months and years
+Idea 2. Detecting “nationwide alert waves” and regional synchronisation
+Main research question
+
+When do alerts occur simultaneously across many Ukrainian oblasts, and which regions show the most similar temporal patterns?
+
+Here, the unit of analysis would be a day or hour rather than an individual alert. For every time unit, calculate how many oblasts were under alert.
+
+This creates a national time series such as:
+
+Number of oblasts experiencing at least one alert on each day.
+
+You could then distinguish between:
+
+relatively local alert activity
+multi-regional alert waves
+nearly nationwide alert periods
+
+Research has previously found that alert patterns can be correlated across regions and that neighbouring-region information may be relevant, so regional synchronisation is a defensible analytical direction.
+
+Data required
+
+The same event-level alert dataset, transformed into either:
+
+an oblast-by-day matrix, where each value is the number of alerts or total alert minutes, or
+an oblast-by-hour binary matrix, where 1 means the oblast was under alert during that hour
+
+The daily version is much easier and more realistic within four hours.
+
+Expected outputs
+
+A finished analysis could include:
+
+A national time series showing the number of oblasts with alerts each day.
+Identification of the ten days with the broadest geographic alert coverage.
+A heatmap of correlations between oblast-level daily alert counts or alert minutes.
+A clustered heatmap grouping regions with similar temporal patterns.
+Optionally, a plot comparing neighbouring and geographically distant region pairs.
+A short description of whether alerts tend to be localised or synchronised.
+
+You could define a simple and transparent measure:
+
+Alert coverage on day 
+𝑡
+=
+number of oblasts with an alert on day 
+𝑡
+number of oblasts included
+Alert coverage on day t=
+number of oblasts included
+number of oblasts with an alert on day t
+	​
+
+
+This gives a national coverage value between 0 and 1.
+
+Main methodological risks
+
+Correlation is not causation. Two oblasts may have similar alert patterns because the same nationwide event affects both, not because activity in one region predicts activity in another.
+
+Daily aggregation loses timing information. Alerts occurring twelve hours apart would still count as occurring on the same day. Hourly analysis is more precise but requires considerably more interval processing.
+
+Long alerts can dominate total-duration correlations. It may be useful to compare a binary daily indicator with total daily minutes.
+
+Administrative changes can distort comparisons. Again, an earlier common cutoff is preferable to mixing oblast-level and raion-level records.
+
+A correlation heatmap can become visually overcrowded. You could restrict it to 8–12 representative oblasts or show clusters without displaying every numerical value.
+
+Why it is useful or interesting
+
+This idea is more original than a standard regional trend analysis but still does not require machine learning.
+
+It tells a coherent story:
+
+Convert individual alerts into regional daily time series.
+Measure how geographically widespread alerts are.
+Examine which regions move together.
+Identify periods dominated by local versus broad alert activity.
+
+It is especially suitable if the organisers value visualisation and pattern discovery.
+
+Idea 3. Can simple baselines forecast next-day alert burden for one oblast?
+Main research question
+
+Can very simple time-series baselines predict the next day’s total alert duration better than a naïve constant prediction?
+
+The objective should not be to claim that attacks can be predicted. The objective is to test whether the historical alert series contains enough short-term regularity for basic forecasting methods to outperform simple baselines.
+
+Choose one oblast and one target:
+
+𝑦
+𝑡
+=
+total number of alert minutes on day 
+𝑡
+y
+t
+	​
+
+=total number of alert minutes on day t
+
+Using both daily count and daily minutes would make the project unnecessarily wide.
+
+Data required
+
+A continuous daily series for one oblast containing:
+
+date
+total alert minutes
+optionally day of week
+lagged values such as yesterday’s burden and the previous seven-day average
+
+Days without alerts must remain in the dataset as zeros. Removing them would seriously bias the series.
+
+Models to compare
+
+Keep the comparison deliberately small:
+
+Global mean baseline: predict the mean of the training period.
+Yesterday baseline: predict the previous day’s value.
+Seven-day seasonal naïve baseline: predict the value from seven days earlier.
+Seven-day rolling mean.
+Optionally, one simple regression using lagged alert burden and calendar variables.
+
+The first four require very little modelling and provide a proper benchmark.
+
+Evaluation design
+
+Use a chronological split, for example:
+
+first 80% of dates for training
+final 20% for testing
+
+Do not use random train-test splitting because that leaks future temporal information into the training data.
+
+Primary metric:
+
+MAE, mean absolute error
+
+Secondary outputs:
+
+actual versus predicted values
+error distribution
+performance during ordinary versus unusually intense periods
+Expected outputs
+A daily target time series.
+A clearly marked chronological train-test split.
+A comparison of baseline MAE values.
+A test-period plot of actual and predicted alert minutes.
+A residual or absolute-error plot.
+A conclusion explaining whether the series was meaningfully predictable.
+
+A negative result is still valid:
+
+Simple historical baselines did not reliably forecast next-day alert burden, suggesting strong non-stationarity and limited short-term predictability from alert history alone.
+
+Main methodological risks
+
+The process is highly non-stationary. Military activity and alert procedures change over time, so patterns learned from earlier periods may stop working.
+
+The target may contain many zeros and occasional extreme values. This makes traditional regression assumptions unreliable.
+
+A model can appear successful merely by predicting low values most days. Always compare it with naïve baselines and inspect performance on high-alert days.
+
+Random splitting would produce misleading results. Only chronological validation is appropriate.
+
+Forecasting alerts is not equivalent to forecasting attacks. The project should explicitly avoid operational or public-safety claims.
+
+There may be weak intrinsic predictability. That is acceptable scientifically, but it makes this option slightly riskier for a time-limited presentation.
+
+Why it is useful or interesting
+
+This is the best option if the organisers expect some modelling. It demonstrates several important time-series principles:
+
+constructing a continuous daily index
+avoiding temporal leakage
+using lag features
+evaluating against baselines
+distinguishing predictive performance from an attractive-looking graph
+
+It is much stronger methodologically than immediately applying ARIMA, Prophet, or an LSTM without proper baselines.
+
+My recommendation
+
+I would choose Idea 1: regional alert burden over time, using three contrasting oblasts and a consistent period ending before the December 2025 geographic change.
+
+A realistic project title could be:
+
+“Temporal Patterns of Air Raid Alert Burden Across Three Ukrainian Regions, 2022–2025”
+
+The central metric would be weekly total alert hours, supported by weekly alert counts and median duration. This gives you:
+
+one precise research question
+one public and reproducible dataset
+manageable data cleaning
+genuine time-series aggregation
+several strong visualisations
+meaningful regional comparison
+no dependence on a forecasting model succeeding
+
+Idea 2 would be my second choice if you want something more visually distinctive. Idea 3 is appropriate only if a forecasting component is especially desirable; it has the greatest risk of consuming your limited time without producing a strong result.
+
+Thank you. Idea 1 seems the most realistic and I agree that the project should focus on alert frequency and duration 
+However, I do not want to select three oblasts or set the November 2025 cutoff before inspecting the real data. Both choices may be reasonable but they are still assumptions(further checking needed).
+I would first like to determine
+1.when the shift from oblast level to raion level reporting actually becomes substantial 
+2.whether all oblasts have comparable coverage during the earlier period 
+3.whether selecting three regions would add clarity or introduce an arbitrary choice 
+4.whether the whole set of oblasts could be retained for the summary while only a few are highlighted in detailed plots. 
+I plan to use the official_data_en.csv file from the Ukrainian Air Raid Sirens Dataset repository.
+Before writing the main analysis please provide only a small Colab-ready audit step that loads the real file and checks its columns, date range, geographic levels etc etc 
+Please do not choose the final regions or cutoff yet. I will run the code and return the actual output so that we can make those decisions from the data.
+
+I’ll keep this strictly diagnostic: load the current official CSV, inspect schema and time coverage, then quantify geographic-level changes and oblast coverage without making any cutoff or region-selection decision.
+
+Думал на протяжении 1m 16s
+
+That is the better approach: audit first, then justify the analytical scope from the observed structure. The repository’s current processor writes the fields oblast, raion, hromada, level, started_at, finished_at, and source; the documented geographic levels are oblast, raion, and hromada, and timestamps are stored in UTC.
+
+The cell below does no substantive alert analysis. It only:
+
+loads the current file;
+checks schema, dates, missingness, duplicates, and durations;
+measures the monthly transition between geographic levels;
+reports several possible “substantial shift” thresholds without selecting one;
+checks how consistently each oblast appears over time;
+produces two diagnostic plots.
+# ============================================================
+# PRE-ANALYSIS AUDIT: official_data_en.csv
+# No regions or analytical cutoff are selected in this step.
+# ============================================================
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import display
+
+DATA_URL = (
+    "https://raw.githubusercontent.com/"
+    "Vadimkin/ukrainian-air-raid-sirens-dataset/"
+    "main/datasets/official_data_en.csv"
+)
+
+# -----------------------------
+# 1. Load the current dataset
+# -----------------------------
+
+raw = pd.read_csv(DATA_URL, low_memory=False)
+df = raw.copy()
+
+expected_columns = [
+    "oblast",
+    "raion",
+    "hromada",
+    "level",
+    "started_at",
+    "finished_at",
+    "source",
+]
+
+missing_expected = [c for c in expected_columns if c not in df.columns]
+
+print("DATASET SHAPE")
+print(f"Rows: {len(df):,}")
+print(f"Columns: {df.shape[1]}")
+print()
+
+print("COLUMN NAMES")
+print(df.columns.tolist())
+print()
+
+if missing_expected:
+    raise ValueError(
+        f"Expected columns missing from the current file: {missing_expected}"
+    )
+
+# Clean textual missing values such as "None"
+text_columns = ["oblast", "raion", "hromada", "level", "source"]
+
+for col in text_columns:
+    df[col] = (
+        df[col]
+        .astype("string")
+        .str.strip()
+        .replace(
+            {
+                "": pd.NA,
+                "None": pd.NA,
+                "none": pd.NA,
+                "nan": pd.NA,
+                "NaN": pd.NA,
+            }
+        )
+    )
+
+# Parse timestamps explicitly as UTC
+for col in ["started_at", "finished_at"]:
+    df[col] = pd.to_datetime(df[col], errors="coerce", utc=True)
+
+df["duration_minutes"] = (
+    df["finished_at"] - df["started_at"]
+).dt.total_seconds() / 60
+
+# Period without timezone, used only for monthly grouping
+df["month"] = (
+    df["started_at"]
+    .dt.tz_convert(None)
+    .dt.to_period("M")
+)
+
+# -----------------------------
+# 2. Schema and basic contents
+# -----------------------------
+
+print("FIRST FIVE ROWS")
+display(df.head())
+
+schema_audit = pd.DataFrame(
+    {
+        "dtype_after_parsing": df.dtypes.astype(str),
+        "missing_n": df.isna().sum(),
+        "missing_percent": (100 * df.isna().mean()).round(2),
+        "unique_non_missing": df.nunique(dropna=True),
+    }
+)
+
+print("SCHEMA AND MISSINGNESS")
+display(schema_audit)
+
+print("CATEGORICAL VALUES")
+
+for col in ["level", "source"]:
+    print(f"\n{col}:")
+    display(
+        df[col]
+        .value_counts(dropna=False)
+        .rename_axis(col)
+        .reset_index(name="rows")
+    )
+
+# -----------------------------
+# 3. Date range and quality checks
+# -----------------------------
+
+valid_duration = df["duration_minutes"].dropna()
+
+quality_audit = pd.Series(
+    {
+        "earliest_start_utc": df["started_at"].min(),
+        "latest_start_utc": df["started_at"].max(),
+        "earliest_finish_utc": df["finished_at"].min(),
+        "latest_finish_utc": df["finished_at"].max(),
+        "missing_or_unparsed_start": df["started_at"].isna().sum(),
+        "missing_or_unparsed_finish": df["finished_at"].isna().sum(),
+        "exact_duplicate_rows": df.duplicated().sum(),
+        "duplicate_event_keys": df.duplicated(
+            subset=[
+                "oblast",
+                "raion",
+                "hromada",
+                "level",
+                "started_at",
+                "finished_at",
+            ]
+        ).sum(),
+        "negative_durations": (df["duration_minutes"] < 0).sum(),
+        "zero_durations": (df["duration_minutes"] == 0).sum(),
+        "durations_over_24_hours": (df["duration_minutes"] > 24 * 60).sum(),
+    },
+    name="value",
+)
+
+print("DATE RANGE AND BASIC QUALITY CHECKS")
+display(quality_audit.to_frame())
+
+if not valid_duration.empty:
+    duration_summary = valid_duration.quantile(
+        [0, 0.01, 0.25, 0.50, 0.75, 0.99, 1]
+    ).rename("duration_minutes")
+
+    print("DURATION QUANTILES")
+    display(duration_summary.to_frame())
+
+# -----------------------------
+# 4. Monthly geographic-level audit
+# -----------------------------
+
+level_counts = (
+    df.groupby(["month", "level"], dropna=False)
+    .size()
+    .unstack(fill_value=0)
+)
+
+# Ensure the expected levels exist as columns
+for level in ["oblast", "raion", "hromada"]:
+    if level not in level_counts.columns:
+        level_counts[level] = 0
+
+level_counts = level_counts[["oblast", "raion", "hromada"]]
+
+geo_monthly = level_counts.copy()
+geo_monthly["total_rows"] = geo_monthly.sum(axis=1)
+geo_monthly["non_oblast_rows"] = (
+    geo_monthly["raion"] + geo_monthly["hromada"]
+)
+geo_monthly["non_oblast_share"] = (
+    geo_monthly["non_oblast_rows"] / geo_monthly["total_rows"]
+)
+
+geo_monthly["oblasts_with_any_level"] = (
+    df.groupby("month")["oblast"]
+    .nunique()
+    .reindex(geo_monthly.index, fill_value=0)
+)
+
+geo_monthly["oblasts_with_oblast_rows"] = (
+    df[df["level"].eq("oblast")]
+    .groupby("month")["oblast"]
+    .nunique()
+    .reindex(geo_monthly.index, fill_value=0)
+)
+
+geo_monthly["oblasts_with_raion_rows"] = (
+    df[df["level"].eq("raion")]
+    .groupby("month")["oblast"]
+    .nunique()
+    .reindex(geo_monthly.index, fill_value=0)
+)
+
+geo_monthly["unique_raions"] = (
+    df[df["level"].eq("raion")]
+    .groupby("month")["raion"]
+    .nunique()
+    .reindex(geo_monthly.index, fill_value=0)
+)
+
+print("MONTHLY GEOGRAPHIC-LEVEL AUDIT: MOST RECENT 24 MONTHS")
+display(
+    geo_monthly.tail(24).style.format(
+        {"non_oblast_share": "{:.1%}"}
+    )
+)
+
+# Report threshold crossings without choosing a cutoff
+threshold_results = []
+
+for threshold in [0.10, 0.25, 0.50, 0.75]:
+    qualifying = geo_monthly[
+        geo_monthly["non_oblast_share"] >= threshold
+    ]
+
+    threshold_results.append(
+        {
+            "non_oblast_share_threshold": f"{threshold:.0%}",
+            "first_month_at_or_above_threshold": (
+                str(qualifying.index[0])
+                if not qualifying.empty
+                else None
+            ),
+            "number_of_months_at_or_above_threshold": len(qualifying),
+        }
+    )
+
+print("POSSIBLE SHIFT THRESHOLDS — DIAGNOSTIC ONLY")
+display(pd.DataFrame(threshold_results))
+
+# Plot the monthly share of records by geographic level
+level_shares = level_counts.div(
+    level_counts.sum(axis=1),
+    axis=0
+)
+
+ax = level_shares.plot(
+    figsize=(13, 5),
+    linewidth=2
+)
+
+ax.set_title("Monthly share of alert records by geographic level")
+ax.set_xlabel("Month")
+ax.set_ylabel("Share of records")
+ax.set_ylim(0, 1)
+ax.legend(title="Level")
+plt.tight_layout()
+plt.show()
+
+# -----------------------------
+# 5. Oblast-level comparability audit
+# -----------------------------
+
+all_months = pd.period_range(
+    start=df["month"].min(),
+    end=df["month"].max(),
+    freq="M",
+)
+
+oblast_level = df[df["level"].eq("oblast")].copy()
+
+oblast_month_counts = pd.crosstab(
+    oblast_level["oblast"],
+    oblast_level["month"],
+).reindex(columns=all_months, fill_value=0)
+
+oblast_presence = oblast_month_counts.gt(0).astype(int)
+
+oblast_summary = pd.DataFrame(
+    {
+        "all_level_rows": df.groupby("oblast").size(),
+        "oblast_level_rows": oblast_level.groupby("oblast").size(),
+        "first_record_any_level": df.groupby("oblast")["started_at"].min(),
+        "last_record_any_level": df.groupby("oblast")["started_at"].max(),
+        "months_with_any_record": df.groupby("oblast")["month"].nunique(),
+        "months_with_oblast_level_record": (
+            oblast_level.groupby("oblast")["month"].nunique()
+        ),
+    }
+).fillna(
+    {
+        "oblast_level_rows": 0,
+        "months_with_oblast_level_record": 0,
+    }
+).sort_index()
+
+oblast_summary["share_of_dataset_months_with_oblast_record"] = (
+    oblast_summary["months_with_oblast_level_record"] / len(all_months)
+)
+
+print("PER-OBLAST RECORD AVAILABILITY")
+display(
+    oblast_summary.style.format(
+        {
+            "share_of_dataset_months_with_oblast_record": "{:.1%}"
+        }
+    )
+)
+
+monthly_oblast_breadth = pd.DataFrame(
+    {
+        "oblasts_with_at_least_one_oblast_level_record":
+            oblast_presence.sum(axis=0),
+        "total_oblast_names_seen_in_dataset":
+            df["oblast"].nunique(),
+    }
+)
+
+print("NUMBER OF OBLASTS WITH AT LEAST ONE OBLAST-LEVEL RECORD PER MONTH")
+display(monthly_oblast_breadth.tail(24))
+
+# Diagnostic heatmap:
+# 1 = at least one oblast-level record in that month
+# 0 = no oblast-level record observed
+fig, ax = plt.subplots(figsize=(15, 7))
+
+image = ax.imshow(
+    oblast_presence.values,
+    aspect="auto",
+    interpolation="nearest",
+)
+
+ax.set_yticks(range(len(oblast_presence.index)))
+ax.set_yticklabels(oblast_presence.index)
+
+tick_positions = np.arange(0, len(all_months), 3)
+ax.set_xticks(tick_positions)
+ax.set_xticklabels(
+    [str(all_months[i]) for i in tick_positions],
+    rotation=45,
+    ha="right",
+)
+
+ax.set_title(
+    "Presence of at least one oblast-level record by oblast and month"
+)
+ax.set_xlabel("Month")
+ax.set_ylabel("Oblast")
+
+plt.colorbar(
+    image,
+    ax=ax,
+    label="At least one oblast-level record"
+)
+
+plt.tight_layout()
+plt.show()
+
+print(
+    "\nIMPORTANT INTERPRETATION NOTE:\n"
+    "A month with zero records does not automatically mean missing data. "
+    "It may represent a true month without alerts. This audit measures "
+    "observed record availability and geographic structure, not confirmed "
+    "technical coverage."
+)
+Outputs most useful for the next decision
+
+Please return:
+
+DATASET SHAPE, column names, and categorical values for level;
+DATE RANGE AND BASIC QUALITY CHECKS;
+the 24-month geographic-level audit;
+the shift-threshold table;
+the per-oblast record availability table;
+both plots, or screenshots of them.
+
+The threshold table is intentionally descriptive. For example, the first month exceeding 50% non-oblast rows is not automatically the correct cutoff because one alert represented by many raion rows can cause a sharp increase in row share. We should assess it together with the number of oblasts containing raion-level records and the persistence of the change.
+
+The proposed audit is methodologically thorough but it is too large for my small project. The audit itself should not become a separate project but it looks like it.
+I want to simplify the final scope to one question - How did the weekly frequency and cumulative duration of oblast-level air-raid alerts change over time, and which oblasts accumulated the greatest alert burden?
+this way the final analysis should contain only 1.weekly number of oblast-level alert records 2. weekly cumulative oblast-alert hours 3. a ranking of the ten oblasts with the greatest cumulative alert duration.
+Now I need only a minimal data audit. Please remove the threshold table, per oblast coverage analysis, availability heatmap, and other diagnostics that are not essential (we can do them if everything goes smoothly).
+Provide one compact Colab-ready block that loads the CSV/prints its dimensions, columns, date range, and level counts/checks missing timestamps, exact duplicates, and invalid durations/shows monthly record counts by geographic level/produces one simple diagnostic plot of those monthly counts. (i think its enough, you can voice your disagreement if you think otherwise)
+Then stop and wait for my output. Do not begin the main analysis yet!
+Думал на протяжении 14s
+
+I agree. For the narrowed research question, this audit is enough to identify major structural problems without turning data checking into a second project. The code loads the current official dataset directly from the repository.
+
+# Minimal audit of official_data_en.csv
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from IPython.display import display
+
+DATA_URL = (
+    "https://raw.githubusercontent.com/"
+    "Vadimkin/ukrainian-air-raid-sirens-dataset/"
+    "main/datasets/official_data_en.csv"
+)
+
+# 1. Load data
+df = pd.read_csv(DATA_URL, low_memory=False)
+
+print("DATASET DIMENSIONS")
+print(f"Rows: {df.shape[0]:,}")
+print(f"Columns: {df.shape[1]}")
+print()
+
+print("COLUMNS")
+print(df.columns.tolist())
+print()
+
+# Confirm that essential columns exist
+required_columns = ["level", "started_at", "finished_at"]
+missing_columns = [col for col in required_columns if col not in df.columns]
+
+if missing_columns:
+    raise ValueError(f"Missing required columns: {missing_columns}")
+
+# 2. Parse timestamps and calculate duration
+df["started_at"] = pd.to_datetime(
+    df["started_at"],
+    errors="coerce",
+    utc=True
+)
+
+df["finished_at"] = pd.to_datetime(
+    df["finished_at"],
+    errors="coerce",
+    utc=True
+)
+
+df["duration_hours"] = (
+    df["finished_at"] - df["started_at"]
+).dt.total_seconds() / 3600
+
+# 3. Basic audit
+print("DATE RANGE")
+print("Earliest start:", df["started_at"].min())
+print("Latest start:  ", df["started_at"].max())
+print()
+
+print("GEOGRAPHIC LEVEL COUNTS")
+display(
+    df["level"]
+    .value_counts(dropna=False)
+    .rename_axis("level")
+    .reset_index(name="record_count")
+)
+
+audit_summary = pd.Series(
+    {
+        "missing/unparsed started_at":
+            int(df["started_at"].isna().sum()),
+
+        "missing/unparsed finished_at":
+            int(df["finished_at"].isna().sum()),
+
+        "exact duplicate rows":
+            int(df.duplicated().sum()),
+
+        "negative durations":
+            int((df["duration_hours"] < 0).sum()),
+
+        "zero durations":
+            int((df["duration_hours"] == 0).sum()),
+
+        "missing durations":
+            int(df["duration_hours"].isna().sum()),
+    },
+    name="count"
+)
+
+print("BASIC QUALITY CHECKS")
+display(audit_summary.to_frame())
+
+# 4. Monthly record counts by geographic level
+valid_dates = df.dropna(subset=["started_at"]).copy()
+
+valid_dates["month"] = (
+    valid_dates["started_at"]
+    .dt.tz_convert(None)
+    .dt.to_period("M")
+    .dt.to_timestamp()
+)
+
+monthly_level_counts = (
+    valid_dates
+    .groupby(["month", "level"], dropna=False)
+    .size()
+    .unstack(fill_value=0)
+    .sort_index()
+)
+
+print("MONTHLY RECORD COUNTS BY GEOGRAPHIC LEVEL")
+display(monthly_level_counts)
+
+# 5. Simple diagnostic plot
+ax = monthly_level_counts.plot(
+    figsize=(13, 5),
+    linewidth=2
+)
+
+ax.set_title("Monthly air-raid alert records by geographic level")
+ax.set_xlabel("Month")
+ax.set_ylabel("Number of records")
+ax.legend(title="Geographic level")
+
+plt.tight_layout()
+plt.show()
+
+Please return the printed audit results, the final part of the monthly table, and the plot.
+
+Вставленный текст.txt
+Документ
+here u go
+Думал на протяжении 27s
+
+Great, this audit already answers the main structural question.
+
+What the audit shows
+
+The dataset contains 273,584 records from 15 March 2022 to 24 June 2026. There are no missing timestamps or negative durations, but there are 113,845 exact duplicate rows, which is the most important finding. Without removing them, both alert frequency and cumulative duration would be severely inflated. There are also four zero-duration records that should be inspected before deciding whether to exclude them.
+
+The reporting transition is clearly visible:
+
+Through July 2025, oblast-level records remain the dominant geographic level.
+In August 2025, raion records increase sharply to 4,874 while oblast records fall to 2,234.
+By November–December 2025, oblast records almost disappear, while raion records exceed 14,000 per month.
+Therefore, the apparent decline in oblast alerts after mid-2025 is primarily a reporting-structure change, not necessarily a real decline in alerts.
+
+A preliminary cutoff of 31 July 2025 appears defensible because July is the final month before the abrupt transition. However, we should first check whether duplicate removal changes the timing or magnitude of this pattern.
+
+Your simplified final scope also makes sense without selecting three oblasts:
+
+Weekly total number of oblast-level alert records.
+Weekly cumulative duration of oblast-level alerts.
+Ranking of all oblasts, displaying the top ten by cumulative duration.
+One final micro-audit before analysis
+
+Run this using the existing df object from the previous cell:
+
+# Final micro-audit: duplicates and zero-duration records
+
+# Count duplicates that would be removed
+duplicate_rows = df[df.duplicated(keep="first")]
+
+print("DUPLICATE ROWS REMOVED BY GEOGRAPHIC LEVEL")
+display(
+    duplicate_rows["level"]
+    .value_counts(dropna=False)
+    .rename_axis("level")
+    .reset_index(name="duplicates_removed")
+)
+
+# Remove exact duplicates
+df_clean = df.drop_duplicates().copy()
+
+print(f"Rows before deduplication: {len(df):,}")
+print(f"Rows after deduplication:  {len(df_clean):,}")
+print(f"Rows removed:              {len(df) - len(df_clean):,}")
+print()
+
+# Inspect the four zero-duration events
+print("ZERO-DURATION RECORDS AFTER DEDUPLICATION")
+display(
+    df_clean.loc[
+        df_clean["duration_hours"].eq(0),
+        ["oblast", "raion", "hromada", "level",
+         "started_at", "finished_at", "source"]
+    ]
+)
+
+# Recalculate monthly counts after duplicate removal
+df_clean["month"] = (
+    df_clean["started_at"]
+    .dt.tz_convert(None)
+    .dt.to_period("M")
+    .dt.to_timestamp()
+)
+
+monthly_clean = (
+    df_clean
+    .groupby(["month", "level"])
+    .size()
+    .unstack(fill_value=0)
+    .sort_index()
+)
+
+print("DEDUPLICATED MONTHLY COUNTS FROM JANUARY 2025")
+display(monthly_clean.loc["2025-01-01":])
+
+Send those three outputs. Then we can decide the cutoff and treatment of zero-duration records before writing the main analysis.
+
+ Here are the outputs from the final micro-audit.
+
+Please use them to confirm the analysis cutoff/ decide whether the zero-duration records should be excluded/clearly state the duplicate-removal rule/define the final analysis cohort. 
+
+Then provide only the next Colabready step for creating the cleaned oblast level dataset and weekly aggregates. Do not generate the final plots yet. 
+
+
+DUPLICATE ROWS REMOVED BY GEOGRAPHIC LEVEL
+
+  
+    
+
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+
+
+  
+    
+      
+      level
+      duplicates_removed
+    
+  
+  
+    
+      0
+      oblast
+      64921
+    
+    
+      1
+      raion
+      32947
+    
+    
+      2
+      hromada
+      15977
+    
+  
+
+
+    
+
+  
+    
+
+  
+    
+  
+    
+
+  
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  
+
+    
+      const buttonEl =
+        document.querySelector('#df-d56958b2-705f-4147-ba41-6b0a7224b987 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-d56958b2-705f-4147-ba41-6b0a7224b987');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    
+  
+
+    
+  
+Rows before deduplication: 273,584
+Rows after deduplication:  159,739
+Rows removed:              113,845
+
+ZERO-DURATION RECORDS AFTER DEDUPLICATION
+
+  
+    
+
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+
+
+  
+    
+      
+      oblast
+      raion
+      hromada
+      level
+      started_at
+      finished_at
+      source
+    
+  
+  
+    
+      94626
+      Odeska oblast
+      Podilskyi raion
+      NaN
+      raion
+      2025-11-14 20:17:15+00:00
+      2025-11-14 20:17:15+00:00
+      official
+    
+    
+      95283
+      Kharkivska oblast
+      Bohodukhivskyi raion
+      NaN
+      raion
+      2025-11-17 01:13:53+00:00
+      2025-11-17 01:13:53+00:00
+      official
+    
+  
+
+
+    
+
+  
+    
+
+  
+    
+  
+    
+
+  
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  
+
+    
+      const buttonEl =
+        document.querySelector('#df-593379d6-471b-47f2-a7a6-b176857013c9 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-593379d6-471b-47f2-a7a6-b176857013c9');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    
+  
+
+    
+  
+DEDUPLICATED MONTHLY COUNTS FROM JANUARY 2025
+
+  
+    
+
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+
+
+  
+    
+      level
+      hromada
+      oblast
+      raion
+    
+    
+      month
+      
+      
+      
+    
+  
+  
+    
+      2025-01-01
+      235
+      1642
+      154
+    
+    
+      2025-02-01
+      332
+      1505
+      125
+    
+    
+      2025-03-01
+      472
+      1402
+      130
+    
+    
+      2025-04-01
+      642
+      1500
+      93
+    
+    
+      2025-05-01
+      596
+      1352
+      317
+    
+    
+      2025-06-01
+      634
+      1463
+      340
+    
+    
+      2025-07-01
+      693
+      1766
+      596
+    
+    
+      2025-08-01
+      631
+      1117
+      2437
+    
+    
+      2025-09-01
+      572
+      705
+      3468
+    
+    
+      2025-10-01
+      693
+      715
+      3498
+    
+    
+      2025-11-01
+      708
+      164
+      7266
+    
+    
+      2025-12-01
+      692
+      24
+      7298
+    
+    
+      2026-01-01
+      704
+      58
+      7665
+    
+    
+      2026-02-01
+      540
+      41
+      7341
+    
+    
+      2026-03-01
+      800
+      39
+      8949
+    
+    
+      2026-04-01
+      691
+      35
+      7883
+    
+    
+      2026-05-01
+      645
+      58
+      9362
+    
+    
+      2026-06-01
+      512
+      37
+      7412
+    
+  
+
+
+    
+
+  
+    
+
+  
+    
+  
+    
+
+  
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  
+
+    
+      const buttonEl =
+        document.querySelector('#df-6b1a9c97-d087-4342-be8e-a588863130d2 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-6b1a9c97-d087-4342-be8e-a588863130d2');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    
+  
+
+    
+  
+Думал на протяжении 1m 6s
+Final cohort decisions
+
+Analysis cutoff: 31 July 2025, implemented as started_at < 2025-08-01.
+
+After deduplication, the structural transition begins clearly in August 2025:
+
+July: 1,766 oblast records versus 596 raion records
+August: 1,117 oblast records versus 2,437 raion records
+September onward: raion reporting dominates increasingly strongly
+
+Therefore, later oblast-level counts are not comparable with the earlier period.
+
+Duplicate rule: remove records that are identical across all seven original columns:
+
+oblast, raion, hromada, level, started_at, finished_at, and source.
+
+The first copy is retained. This removes 113,845 exact duplicates, including 64,921 oblast-level duplicates.
+
+Zero-duration rule: exclude records with duration <= 0. The two remaining zero-duration records are raion-level events from November 2025, so this rule does not affect the final oblast-level cohort.
+
+Final cohort: unique, valid, positive-duration records with:
+
+level == "oblast"
+non-missing oblast name
+alert start before 1 August 2025
+study beginning at the first available official record on 15 March 2022
+
+Alerts crossing the cutoff are clipped at the cutoff. Weekly frequency is based on the week in which an alert started, while duration is divided across weekly boundaries so each hour is assigned to the week in which it occurred.
+
+# ============================================================
+# Create the cleaned oblast-level cohort and weekly aggregates
+# Assumes that `df` from the audit step is still available
+# ============================================================
+
+import pandas as pd
+from IPython.display import display
+
+LOCAL_TZ = "Europe/Kyiv"
+ANALYSIS_CUTOFF = pd.Timestamp("2025-08-01 00:00:00", tz=LOCAL_TZ)
+
+ORIGINAL_COLUMNS = [
+    "oblast",
+    "raion",
+    "hromada",
+    "level",
+    "started_at",
+    "finished_at",
+    "source",
+]
+
+missing_columns = [
+    col for col in ORIGINAL_COLUMNS
+    if col not in df.columns
+]
+
+if missing_columns:
+    raise ValueError(f"Missing required columns: {missing_columns}")
+
+data = df.copy()
+
+# Ensure consistent timestamp and text formats
+data["started_at"] = pd.to_datetime(
+    data["started_at"],
+    errors="coerce",
+    utc=True
+)
+
+data["finished_at"] = pd.to_datetime(
+    data["finished_at"],
+    errors="coerce",
+    utc=True
+)
+
+data["level"] = (
+    data["level"]
+    .astype("string")
+    .str.strip()
+    .str.lower()
+)
+
+data["oblast"] = (
+    data["oblast"]
+    .astype("string")
+    .str.strip()
+)
+
+# ------------------------------------------------------------
+# 1. Remove exact duplicates across the original source fields
+# ------------------------------------------------------------
+
+rows_before = len(data)
+
+data = (
+    data
+    .drop_duplicates(
+        subset=ORIGINAL_COLUMNS,
+        keep="first"
+    )
+    .copy()
+)
+
+rows_after_deduplication = len(data)
+
+# ------------------------------------------------------------
+# 2. Define the oblast-level analysis cohort
+# ------------------------------------------------------------
+
+data["raw_duration_hours"] = (
+    data["finished_at"] - data["started_at"]
+).dt.total_seconds() / 3600
+
+oblast_clean = data.loc[
+    data["level"].eq("oblast")
+    & data["oblast"].notna()
+    & data["started_at"].notna()
+    & data["finished_at"].notna()
+    & data["raw_duration_hours"].gt(0)
+].copy()
+
+# Convert timestamps to Ukrainian local time
+oblast_clean["started_local"] = (
+    oblast_clean["started_at"]
+    .dt.tz_convert(LOCAL_TZ)
+)
+
+oblast_clean["finished_local"] = (
+    oblast_clean["finished_at"]
+    .dt.tz_convert(LOCAL_TZ)
+)
+
+# Retain alerts beginning before the reporting transition
+oblast_clean = oblast_clean.loc[
+    oblast_clean["started_local"] < ANALYSIS_CUTOFF
+].copy()
+
+# Clip alerts that extend beyond the cutoff
+oblast_clean["analysis_finish_local"] = (
+    oblast_clean["finished_local"]
+    .where(
+        oblast_clean["finished_local"] < ANALYSIS_CUTOFF,
+        ANALYSIS_CUTOFF
+    )
+)
+
+oblast_clean = oblast_clean.loc[
+    oblast_clean["analysis_finish_local"]
+    > oblast_clean["started_local"]
+].copy()
+
+oblast_clean["duration_hours"] = (
+    oblast_clean["analysis_finish_local"]
+    - oblast_clean["started_local"]
+).dt.total_seconds() / 3600
+
+# Monday-based week containing the alert start
+oblast_clean["start_week"] = (
+    oblast_clean["started_local"].dt.normalize()
+    - pd.to_timedelta(
+        oblast_clean["started_local"].dt.weekday,
+        unit="D"
+    )
+)
+
+oblast_clean = oblast_clean.sort_values(
+    ["started_local", "oblast"]
+).reset_index(drop=True)
+
+# ------------------------------------------------------------
+# 3. Weekly alert frequency
+# Each record is counted in the week when the alert started
+# ------------------------------------------------------------
+
+weekly_frequency = (
+    oblast_clean
+    .groupby("start_week")
+    .size()
+    .rename("alert_count")
+)
+
+# ------------------------------------------------------------
+# 4. Weekly cumulative duration
+# Split alerts that cross a Monday weekly boundary
+# ------------------------------------------------------------
+
+weekly_duration_segments = []
+
+for alert in oblast_clean.itertuples(index=False):
+
+    segment_start = alert.started_local
+    alert_end = alert.analysis_finish_local
+
+    while segment_start < alert_end:
+
+        week_start = (
+            segment_start.normalize()
+            - pd.Timedelta(days=segment_start.weekday())
+        )
+
+        next_week_start = week_start + pd.DateOffset(weeks=1)
+        segment_end = min(alert_end, next_week_start)
+
+        segment_hours = (
+            segment_end - segment_start
+        ).total_seconds() / 3600
+
+        weekly_duration_segments.append(
+            {
+                "week_start": week_start,
+                "alert_hours": segment_hours,
+            }
+        )
+
+        segment_start = segment_end
+
+duration_segments = pd.DataFrame(weekly_duration_segments)
+
+weekly_duration = (
+    duration_segments
+    .groupby("week_start")["alert_hours"]
+    .sum()
+)
+
+# ------------------------------------------------------------
+# 5. Create a continuous weekly time series
+# ------------------------------------------------------------
+
+first_week = min(
+    weekly_frequency.index.min(),
+    weekly_duration.index.min()
+)
+
+last_included_time = ANALYSIS_CUTOFF - pd.Timedelta(nanoseconds=1)
+
+last_week = (
+    last_included_time.normalize()
+    - pd.Timedelta(days=last_included_time.weekday())
+)
+
+complete_week_index = pd.date_range(
+    start=first_week,
+    end=last_week,
+    freq="W-MON"
+)
+
+weekly_oblast = (
+    pd.concat(
+        [weekly_frequency, weekly_duration],
+        axis=1
+    )
+    .reindex(complete_week_index, fill_value=0)
+    .rename_axis("week_start")
+    .reset_index()
+)
+
+weekly_oblast["week_end"] = (
+    weekly_oblast["week_start"]
+    + pd.DateOffset(weeks=1)
+)
+
+analysis_start = oblast_clean["started_local"].min()
+
+weekly_oblast["is_complete_week"] = (
+    weekly_oblast["week_start"].ge(analysis_start)
+    & weekly_oblast["week_end"].le(ANALYSIS_CUTOFF)
+)
+
+weekly_oblast["alert_count"] = (
+    weekly_oblast["alert_count"].astype(int)
+)
+
+# ------------------------------------------------------------
+# 6. Confirm the resulting datasets
+# ------------------------------------------------------------
+
+print("CLEANING SUMMARY")
+print(f"Original rows:                  {rows_before:,}")
+print(
+    f"Exact duplicates removed:       "
+    f"{rows_before - rows_after_deduplication:,}"
+)
+print(f"Final oblast-level records:     {len(oblast_clean):,}")
+print(f"Number of oblasts:              {oblast_clean['oblast'].nunique()}")
+print(
+    "Analysis period:                "
+    f"{oblast_clean['started_local'].min()} to "
+    f"{ANALYSIS_CUTOFF}"
+)
+print(f"Weekly observations:            {len(weekly_oblast):,}")
+print()
+
+print("CLEANED OBLAST-LEVEL DATASET")
+display(oblast_clean.head())
+
+print("FIRST WEEKS")
+display(weekly_oblast.head())
+
+print("LAST WEEKS")
+display(weekly_oblast.tail())
+Вставленный текст.txt
+Документ
+Here are the outputs. Check so the number of oblasts and final records is plausible 2. the weekly index and complete-week indicator were created correctly 3. the frequency and cumulative-duration values do not show obvious processing errors 4. the first and final partial weeks are handled appropriately 
+After verifying the outputs provide the next Colab-ready step for only three final results - weekly oblast-level alert count over time/weekly cumulative oblast-alert hours over time/top ten oblasts by cumulative alert duration.
+Please include code to save the three figures as png files
+
+
+Думал на протяжении 25s
+
+The outputs look internally consistent.
+
+1. Cohort size and oblast count
+
+62,139 records is plausible. The original file contained 130,055 oblast-level rows; removing 64,921 exact oblast duplicates leaves 65,134 unique oblast-level rows across the entire file. Excluding the period from August 2025 onward reduces this to 62,139, which matches the observed reporting transition.
+25 oblast values is also plausible because the dataset likely represents the 24 oblasts plus Kyiv City as a separate top-level geographic unit. The ranking code below preserves the dataset’s original labels.
+
+2. Weekly index
+
+The Monday-based index is correct and continuous:
+
+first week: Monday 14 March 2022
+final week: Monday 28 July 2025
+177 weekly rows
+timezone offsets correctly change from UTC+2 to UTC+3 after daylight-saving transitions
+
+The change in UTC offset shown in week_end is expected and does not indicate an indexing error.
+
+3. Frequency and duration values
+
+There are no obvious processing errors:
+
+weekly counts in the range of roughly 250–460 records are compatible with the monthly counts;
+weekly duration values of several hundred hours are reasonable because these are cumulative oblast-hours, not unique national hours;
+with 25 geographic units, the theoretical weekly cumulative maximum is approximately 
+25
+×
+168
+=
+4
+,
+200
+25×168=4,200 oblast-hours.
+
+4. Partial weeks
+
+The flags are correct:
+
+14–20 March 2022 is incomplete because data begin on 15 March;
+28 July–3 August 2025 is incomplete because the analysis stops at the beginning of 1 August.
+
+For comparable weekly trends, the code below excludes these two partial weeks from the time-series figures. The oblast ranking uses the complete study interval from the first available record through 31 July 2025, because cumulative burden does not require calendar weeks of equal length.
+
+# ============================================================
+# FINAL RESULTS
+# 1. Weekly oblast-level alert count
+# 2. Weekly cumulative oblast-alert hours
+# 3. Top ten oblasts by cumulative alert duration
+# ============================================================
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from IPython.display import display
+
+# ------------------------------------------------------------
+# Basic validation
+# ------------------------------------------------------------
+
+required_weekly_columns = {
+    "week_start",
+    "alert_count",
+    "alert_hours",
+    "is_complete_week",
+}
+
+missing_weekly = required_weekly_columns - set(weekly_oblast.columns)
+
+if missing_weekly:
+    raise ValueError(
+        f"weekly_oblast is missing columns: {sorted(missing_weekly)}"
+    )
+
+if "oblast" not in oblast_clean.columns or "duration_hours" not in oblast_clean.columns:
+    raise ValueError(
+        "oblast_clean must contain 'oblast' and 'duration_hours'."
+    )
+
+assert not weekly_oblast["week_start"].duplicated().any()
+assert (weekly_oblast["alert_count"] >= 0).all()
+assert (weekly_oblast["alert_hours"] >= 0).all()
+assert (oblast_clean["duration_hours"] > 0).all()
+
+# Use only complete calendar weeks for comparable weekly plots
+weekly_complete = (
+    weekly_oblast.loc[weekly_oblast["is_complete_week"]]
+    .sort_values("week_start")
+    .copy()
+)
+
+# Confirm that complete weeks form a continuous Monday sequence
+expected_weeks = pd.date_range(
+    weekly_complete["week_start"].min(),
+    weekly_complete["week_start"].max(),
+    freq="W-MON"
+)
+
+assert list(weekly_complete["week_start"]) == list(expected_weeks)
+
+print(f"Complete weeks plotted: {len(weekly_complete):,}")
+print(
+    "Weekly plotting period:",
+    weekly_complete["week_start"].min().date(),
+    "to",
+    weekly_complete["week_start"].max().date(),
+)
+
+# ------------------------------------------------------------
+# Figure 1: weekly oblast-level alert count
+# ------------------------------------------------------------
+
+fig, ax = plt.subplots(figsize=(13, 5))
+
+ax.plot(
+    weekly_complete["week_start"],
+    weekly_complete["alert_count"],
+    linewidth=1.5
+)
+
+ax.set_title("Weekly Number of Oblast-Level Air-Raid Alert Records")
+ax.set_xlabel("Week")
+ax.set_ylabel("Number of alert records")
+ax.grid(axis="y", alpha=0.3)
+
+fig.tight_layout()
+fig.savefig(
+    "weekly_oblast_alert_count.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+
+# ------------------------------------------------------------
+# Figure 2: weekly cumulative oblast-alert hours
+# ------------------------------------------------------------
+
+fig, ax = plt.subplots(figsize=(13, 5))
+
+ax.plot(
+    weekly_complete["week_start"],
+    weekly_complete["alert_hours"],
+    linewidth=1.5
+)
+
+ax.set_title("Weekly Cumulative Duration of Oblast-Level Air-Raid Alerts")
+ax.set_xlabel("Week")
+ax.set_ylabel("Cumulative oblast-alert hours")
+ax.grid(axis="y", alpha=0.3)
+
+fig.tight_layout()
+fig.savefig(
+    "weekly_oblast_alert_hours.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+
+# ------------------------------------------------------------
+# Figure 3: top ten oblasts by cumulative alert duration
+# ------------------------------------------------------------
+
+oblast_burden = (
+    oblast_clean
+    .groupby("oblast", as_index=False)["duration_hours"]
+    .sum()
+    .rename(columns={"duration_hours": "cumulative_alert_hours"})
+    .sort_values(
+        "cumulative_alert_hours",
+        ascending=False
+    )
+)
+
+top10_oblasts = oblast_burden.head(10).copy()
+
+# Shorten labels only for the figure
+top10_oblasts["plot_label"] = (
+    top10_oblasts["oblast"]
+    .str.replace(" oblast", "", regex=False)
+)
+
+print("\nTOP TEN OBLASTS BY CUMULATIVE ALERT DURATION")
+display(
+    top10_oblasts[
+        ["oblast", "cumulative_alert_hours"]
+    ].round({"cumulative_alert_hours": 1})
+)
+
+# Ascending order places the largest bar at the top
+plot_data = top10_oblasts.sort_values(
+    "cumulative_alert_hours",
+    ascending=True
+)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+bars = ax.barh(
+    plot_data["plot_label"],
+    plot_data["cumulative_alert_hours"]
+)
+
+ax.set_title("Top Ten Oblasts by Cumulative Air-Raid Alert Duration")
+ax.set_xlabel("Cumulative alert hours")
+ax.set_ylabel("Oblast")
+ax.grid(axis="x", alpha=0.3)
+
+ax.bar_label(
+    bars,
+    labels=[
+        f"{value:,.0f}"
+        for value in plot_data["cumulative_alert_hours"]
+    ],
+    padding=3
+)
+
+fig.tight_layout()
+fig.savefig(
+    "top10_oblasts_cumulative_alert_hours.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+
+print("\nSaved PNG files:")
+print("1. weekly_oblast_alert_count.png")
+print("2. weekly_oblast_alert_hours.png")
+print("3. top10_oblasts_cumulative_alert_hours.png")
+Here are the three final figures and the top ten ranking.
+Please review the outputs critically identify the main temporal patterns visible in weekly alert frequency and cumulative oblast-alert hours/explain whether the two time series tell the same or different stories/summarise the regional ranking without interpreting alert duration as a direct measure of attacks or actual danger/flag any suspicious values or visualisation problems that require correction/propose 3-5 concise findings and 3-5 limitations suitable for the notebook and readme.
+Do not add forecasting or new analyses unless the current results contain a clear problem
+Думал на протяжении 29s
+Critical review of the results
+
+The figures appear internally plausible. None of the values suggests an obvious aggregation or duration-processing error.
+
+Weekly alert counts range from roughly 90 to 600 records, while weekly cumulative duration ranges from about 100 to 880 oblast-alert hours. Values above 168 hours are expected because duration is summed across multiple oblasts; they do not represent the number of clock hours in one week.
+
+Weekly alert frequency
+
+The frequency series is highly variable, with substantial week-to-week fluctuations rather than a smooth long-term trend.
+
+The main visible phases are:
+
+Spring to autumn 2022: generally high but volatile frequency, often around 300–480 records per week.
+Late 2022 to early 2023: a pronounced decline, including the lowest observed week at approximately 90 records.
+2023: recovery with several isolated peaks, but no continuously increasing trend.
+Early to mid-2024: the highest-frequency period, including several weeks above 500 records and a maximum near 600.
+Late 2024 through July 2025: generally lower than the 2024 peak, but still mostly around 300–450 records per week.
+
+The series therefore suggests alternating periods of high and low alert activity rather than a consistent increase across the entire study period.
+
+Weekly cumulative duration
+
+The duration series shows a clearer long-term change:
+
+Most of 2022 and 2023: cumulative duration was commonly around 200–450 oblast-alert hours per week, with several low periods near 100–200 hours.
+Beginning around late 2023 or early 2024: weekly cumulative duration increased.
+Mid-2024 through July 2025: duration remained persistently elevated, commonly around 550–850 hours per week.
+Several of the highest-duration weeks occur in the second half of 2024 and early 2025, approaching 900 oblast-alert hours.
+
+The sustained elevation after early 2024 is more visible in duration than in frequency.
+
+Do the two time series tell the same story?
+
+They are related, but they do not tell exactly the same story.
+
+Both series show:
+
+strong week-to-week volatility;
+lower activity around late 2022 and early 2023;
+increased alert burden during parts of 2024.
+
+However, their later trajectories differ. Frequency reaches major peaks during 2024 but subsequently remains mostly within a moderate range. Cumulative duration, by contrast, rises and stays elevated through much of late 2024 and 2025.
+
+This divergence suggests that later alerts were, on average, longer in duration, even when the weekly number of alert records was not exceptionally high. This is an inference from the relationship between total hours and record counts, not a direct analysis of mean alert duration.
+
+Regional ranking
+
+The largest cumulative oblast-level alert duration was observed for:
+
+Donetska oblast: 10,530 hours
+Kharkivska oblast: 9,058 hours
+Sumska oblast: 7,870 hours
+Zaporizka oblast: 6,569 hours
+Dnipropetrovska oblast: 5,253 hours
+
+Poltavska oblast had a similar cumulative burden to Dnipropetrovska, at 5,224 hours. Chernihivska, Mykolaivska, Kirovohradska, and Khersonska completed the top ten.
+
+The ranking should be described as a ranking of recorded cumulative oblast-alert duration, not as a ranking of attacks, casualties, military activity, or objective danger. Alert duration reflects the time during which official alerts remained active and can also be influenced by alert-declaration practices, geographic exposure, threat assessment, and reporting procedures.
+
+Suspicious values and visualisation issues
+
+There are no clearly suspicious values requiring the analysis to be repeated.
+
+The large first visible duration value, around 720 hours, is plausible because it sums alerts across 25 top-level geographic units. Similarly, the peak of approximately 600 weekly records is compatible with the monthly record totals after duplicate removal.
+
+Two minor visual corrections would improve the figures:
+
+The time-series x-axes extend visually to approximately September 2025, although the final complete week ends in July 2025. Set the x-axis limits explicitly to the first and last plotted week so the figure does not imply later observations.
+The Donetska value label is close to the right plot boundary. Adding a small horizontal margin would prevent clipping in different export formats.
+
+It would also help to mention in the figure caption that the first and final partial weeks were excluded and that “oblast-alert hours” are summed across oblasts.
+
+Concise findings for the notebook or README
+Weekly oblast-level alert frequency was highly variable, ranging from approximately 90 to 600 records per complete week, without a single continuous upward or downward trend.
+The lowest-frequency period occurred around late 2022 and early 2023, followed by renewed alert activity and several major peaks during 2024.
+Weekly cumulative alert duration increased more clearly than alert frequency, remaining persistently elevated from approximately mid-2024 through July 2025.
+Frequency and duration captured different aspects of alert burden: later periods did not always contain more alert records, but the recorded alerts collectively lasted longer.
+Donetska, Kharkivska, and Sumska oblasts accumulated the greatest recorded alert duration, with Donetska exceeding 10,500 cumulative hours during the study period.
+Concise limitations for the notebook or README
+The analysis includes only oblast-level records from 15 March 2022 through 31 July 2025. Later data were excluded because reporting shifted substantially toward the raion level.
+Cumulative oblast-alert hours measure the duration of officially declared alerts, not the number of attacks, actual exposure, casualties, or objective danger.
+Alert records may be affected by changes in reporting systems, regional alert policies, administrative decisions, and official threat-assessment practices.
+Frequency counts each oblast alert as one record regardless of duration, while cumulative hours give greater weight to long alerts. The two metrics are therefore complementary but not interchangeable.
+The first and final partial calendar weeks were excluded from weekly plots, while the regional cumulative ranking uses the full available study interval through the cutoff.
+Before finalising the figures and conclusions and everything I want to verify three points.
+The time/series plots visually extend toward September 2025 even though the final included complete week is in July 2025. Please confirm whether the extra empty space after July 2025 is only a plotting issue, and whether limiting the x-axis to the actual data range is the correct fix. If not propose solutions 
+The value label for Donetska oblast is very close to the right boundary of the ranking figure. Please confirm that adding horizontal axis space or a margin is sufficient and does not alter the result.
+I want to avoid overstating the comparison between frequency and cumulative duration. Since we did not directly calculate or analyse mean alert duration, is the following wording even methodologically appropriate?
+“Higher cumulative duration relative to alert frequency suggests that alerts may have collectively lasted longer.” - Please clarify whether this cautious inference is supported by the two displayed series, or whether it should be weakened or removed unless mean duration is calculated explicitly (its just weird).
+Do not add a new analysis yet. First verify these three points and recommend the final wording.
+Думал на протяжении 30s
+1. Empty space after July 2025
+
+Yes, this is only a plotting issue, not evidence that the dataset contains observations through September.
+
+Matplotlib automatically adds horizontal padding around the first and last x-values. Because the series spans more than three years, the default margin adds several weeks after the final observation. The automatic date-tick locator then places a tick around September 2025.
+
+The correct fix is to set the x-axis limits explicitly. Since the final complete week starts on 21 July and ends on 28 July 2025, the most semantically accurate limits are:
+
+ax.set_xlim(
+    weekly_complete["week_start"].min(),
+    weekly_complete["week_end"].max()
+)
+
+This shows the full period covered by the complete weeks while removing the misleading extension toward September.
+
+Alternatively, setting the limit to the last week_start is also valid:
+
+ax.set_xlim(
+    weekly_complete["week_start"].min(),
+    weekly_complete["week_start"].max()
+)
+
+However, that places the final weekly point directly at the boundary. Using the final week_end gives it a small, meaningful amount of space representing the full last week.
+
+This change affects only the displayed axis, not the data or results.
+
+2. Donetska value label
+
+Yes, adding horizontal space is sufficient. The value itself is correct; only the label placement is too close to the boundary.
+
+A controlled solution is:
+
+ax.set_xlim(
+    0,
+    plot_data["cumulative_alert_hours"].max() * 1.10
+)
+
+A multiplier of 1.10 or 1.12 should provide enough room for 10,530. This does not rescale or modify the underlying values. It only increases the visible axis range.
+
+Using ax.margins(x=0.08) would also work, but an explicit upper limit is preferable for a horizontal bar chart because it preserves zero as the left boundary.
+
+3. Comparison between frequency and cumulative duration
+
+The original wording is not ideal:
+
+“Higher cumulative duration relative to alert frequency suggests that alerts may have collectively lasted longer.”
+
+There are two problems.
+
+First, cumulative duration already measures how long the alerts lasted collectively. Therefore, saying that greater cumulative duration suggests that they “collectively lasted longer” is somewhat circular.
+
+Second, the two weekly metrics were constructed differently:
+
+alert frequency assigns each record to the week in which it started;
+alert duration is divided across the weeks during which the alert was active.
+
+An alert starting late on Sunday may therefore contribute one count to one week but most of its duration to the following week. Because of this, visually comparing the two series is not equivalent to calculating:
+
+mean alert duration
+=
+total duration
+number of alerts
+mean alert duration=
+number of alerts
+total duration
+	​
+
+
+The figures support the conclusion that frequency and cumulative duration did not always move in parallel. They do not, by themselves, establish that the mean duration of individual alerts increased.
+
+Recommended final wording
+
+Weekly alert counts and cumulative oblast-alert hours did not move in parallel throughout the study period. From mid-2024 onward, cumulative duration remained elevated even when weekly alert counts were not consistently at their highest, indicating that the two metrics capture different dimensions of alert burden. Mean alert duration was not calculated, so these figures should not be interpreted as evidence that individual alerts became longer.
+
+A shorter version for the findings section:
+
+Cumulative oblast-alert hours remained elevated during periods when weekly alert counts were not at their maximum. This divergence shows that alert frequency and total duration capture different aspects of alert burden, but it does not demonstrate an increase in mean alert duration.
+
+This is the most methodologically defensible formulation without adding a separate mean-duration analysis.
+
+Thank you. I will use the recommended wording and will not interpret the figures as evidence that mean alert duration increased.
+Please now provide one final compact Colab-ready code block that
+recreates the same three figures without changing the underlying data or calculations
+limits both time-series x-axes to the actual complete-week period, using the final complete week end as the right boundary
+adds sufficient horizontal space for the Donetska value label;
+creates figures/ and outputs/ directories
+saves the corrected figures as:
+figures/weekly_oblast_alert_count.png
+figures/weekly_oblast_alert_hours.png
+figures/top10_oblasts_cumulative_alert_hours.png
+exports:
+the complete weekly metrics table as outputs/weekly_oblast_metrics.csv
+the full oblast ranking as outputs/oblast_cumulative_alert_hours.csv
+Please do not add anything else like additional analyses.
+At the end show the list of created files and their sizes. Then stop.
+Думал на протяжении 9s
+# Final corrected figures and exported result tables
+# Assumes `weekly_oblast` and `oblast_clean` already exist
+
+from pathlib import Path
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# ------------------------------------------------------------
+# 1. Create output directories
+# ------------------------------------------------------------
+
+FIGURES_DIR = Path("figures")
+OUTPUTS_DIR = Path("outputs")
+
+FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+
+# ------------------------------------------------------------
+# 2. Prepare unchanged result tables
+# ------------------------------------------------------------
+
+weekly_metrics = (
+    weekly_oblast
+    .sort_values("week_start")
+    .reset_index(drop=True)
+    .copy()
+)
+
+weekly_complete = (
+    weekly_metrics.loc[weekly_metrics["is_complete_week"]]
+    .copy()
+)
+
+first_complete_week_start = weekly_complete["week_start"].min()
+final_complete_week_end = weekly_complete["week_end"].max()
+
+oblast_ranking = (
+    oblast_clean
+    .groupby("oblast", as_index=False)["duration_hours"]
+    .sum()
+    .rename(columns={"duration_hours": "cumulative_alert_hours"})
+    .sort_values(
+        "cumulative_alert_hours",
+        ascending=False
+    )
+    .reset_index(drop=True)
+)
+
+oblast_ranking.insert(
+    0,
+    "rank",
+    range(1, len(oblast_ranking) + 1)
+)
+
+top10_oblasts = oblast_ranking.head(10).copy()
+
+top10_oblasts["plot_label"] = (
+    top10_oblasts["oblast"]
+    .str.replace(" oblast", "", regex=False)
+)
+
+# ------------------------------------------------------------
+# 3. Export result tables
+# ------------------------------------------------------------
+
+weekly_metrics.to_csv(
+    OUTPUTS_DIR / "weekly_oblast_metrics.csv",
+    index=False
+)
+
+oblast_ranking.to_csv(
+    OUTPUTS_DIR / "oblast_cumulative_alert_hours.csv",
+    index=False
+)
+
+# ------------------------------------------------------------
+# 4. Figure 1: weekly oblast-level alert count
+# ------------------------------------------------------------
+
+fig, ax = plt.subplots(figsize=(13, 5))
+
+ax.plot(
+    weekly_complete["week_start"],
+    weekly_complete["alert_count"],
+    linewidth=1.5
+)
+
+ax.set_xlim(
+    first_complete_week_start,
+    final_complete_week_end
+)
+
+ax.set_title("Weekly Number of Oblast-Level Air-Raid Alert Records")
+ax.set_xlabel("Week")
+ax.set_ylabel("Number of alert records")
+ax.grid(axis="y", alpha=0.3)
+
+fig.tight_layout()
+fig.savefig(
+    FIGURES_DIR / "weekly_oblast_alert_count.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+plt.close(fig)
+
+# ------------------------------------------------------------
+# 5. Figure 2: weekly cumulative oblast-alert hours
+# ------------------------------------------------------------
+
+fig, ax = plt.subplots(figsize=(13, 5))
+
+ax.plot(
+    weekly_complete["week_start"],
+    weekly_complete["alert_hours"],
+    linewidth=1.5
+)
+
+ax.set_xlim(
+    first_complete_week_start,
+    final_complete_week_end
+)
+
+ax.set_title("Weekly Cumulative Duration of Oblast-Level Air-Raid Alerts")
+ax.set_xlabel("Week")
+ax.set_ylabel("Cumulative oblast-alert hours")
+ax.grid(axis="y", alpha=0.3)
+
+fig.tight_layout()
+fig.savefig(
+    FIGURES_DIR / "weekly_oblast_alert_hours.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+plt.close(fig)
+
+# ------------------------------------------------------------
+# 6. Figure 3: top ten oblasts by cumulative duration
+# ------------------------------------------------------------
+
+plot_data = top10_oblasts.sort_values(
+    "cumulative_alert_hours",
+    ascending=True
+)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+bars = ax.barh(
+    plot_data["plot_label"],
+    plot_data["cumulative_alert_hours"]
+)
+
+maximum_hours = plot_data["cumulative_alert_hours"].max()
+
+ax.set_xlim(0, maximum_hours * 1.12)
+
+ax.set_title("Top Ten Oblasts by Cumulative Air-Raid Alert Duration")
+ax.set_xlabel("Cumulative alert hours")
+ax.set_ylabel("Oblast")
+ax.grid(axis="x", alpha=0.3)
+
+ax.bar_label(
+    bars,
+    labels=[
+        f"{value:,.0f}"
+        for value in plot_data["cumulative_alert_hours"]
+    ],
+    padding=3
+)
+
+fig.tight_layout()
+fig.savefig(
+    FIGURES_DIR / "top10_oblasts_cumulative_alert_hours.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+plt.close(fig)
+
+# ------------------------------------------------------------
+# 7. Show created files and sizes
+# ------------------------------------------------------------
+
+created_files = [
+    FIGURES_DIR / "weekly_oblast_alert_count.png",
+    FIGURES_DIR / "weekly_oblast_alert_hours.png",
+    FIGURES_DIR / "top10_oblasts_cumulative_alert_hours.png",
+    OUTPUTS_DIR / "weekly_oblast_metrics.csv",
+    OUTPUTS_DIR / "oblast_cumulative_alert_hours.csv",
+]
+
+def format_file_size(size_bytes):
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    if size_bytes < 1024**2:
+        return f"{size_bytes / 1024:.1f} KB"
+    return f"{size_bytes / 1024**2:.2f} MB"
+
+print("CREATED FILES")
+for file_path in created_files:
+    print(
+        f"{file_path.as_posix():55s} "
+        f"{format_file_size(file_path.stat().st_size)}"
+    )
+here
+Думал на протяжении 17s
+
+The error means the Colab runtime does not currently contain weekly_oblast—usually because the earlier aggregation cell was skipped or the runtime restarted. oblast_clean may also be missing.
+
+Replace the failed cell with this self-contained version. It reloads the same CSV, applies the same cleaning and aggregation rules, and then creates the requested files.
+
+# ============================================================
+# SELF-CONTAINED FINAL EXPORT
+# Recreates the cleaned cohort, weekly metrics, figures and CSVs
+# ============================================================
+
+from pathlib import Path
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+# ------------------------------------------------------------
+# 1. Configuration
+# ------------------------------------------------------------
+
+DATA_URL = (
+    "https://raw.githubusercontent.com/"
+    "Vadimkin/ukrainian-air-raid-sirens-dataset/"
+    "main/datasets/official_data_en.csv"
+)
+
+LOCAL_TZ = "Europe/Kyiv"
+ANALYSIS_CUTOFF = pd.Timestamp(
+    "2025-08-01 00:00:00",
+    tz=LOCAL_TZ
+)
+
+ORIGINAL_COLUMNS = [
+    "oblast",
+    "raion",
+    "hromada",
+    "level",
+    "started_at",
+    "finished_at",
+    "source",
+]
+
+FIGURES_DIR = Path("figures")
+OUTPUTS_DIR = Path("outputs")
+
+FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# ------------------------------------------------------------
+# 2. Load and clean the source data
+# ------------------------------------------------------------
+
+df = pd.read_csv(DATA_URL, low_memory=False)
+
+missing_columns = [
+    column for column in ORIGINAL_COLUMNS
+    if column not in df.columns
+]
+
+if missing_columns:
+    raise ValueError(
+        f"Missing required columns: {missing_columns}"
+    )
+
+df["started_at"] = pd.to_datetime(
+    df["started_at"],
+    errors="coerce",
+    utc=True
+)
+
+df["finished_at"] = pd.to_datetime(
+    df["finished_at"],
+    errors="coerce",
+    utc=True
+)
+
+df["level"] = (
+    df["level"]
+    .astype("string")
+    .str.strip()
+    .str.lower()
+)
+
+df["oblast"] = (
+    df["oblast"]
+    .astype("string")
+    .str.strip()
+)
+
+# Retain the first copy of rows identical across all source fields
+df_clean = (
+    df
+    .drop_duplicates(
+        subset=ORIGINAL_COLUMNS,
+        keep="first"
+    )
+    .copy()
+)
+
+df_clean["raw_duration_hours"] = (
+    df_clean["finished_at"] - df_clean["started_at"]
+).dt.total_seconds() / 3600
+
+
+# ------------------------------------------------------------
+# 3. Create the oblast-level analysis cohort
+# ------------------------------------------------------------
+
+oblast_clean = df_clean.loc[
+    df_clean["level"].eq("oblast")
+    & df_clean["oblast"].notna()
+    & df_clean["started_at"].notna()
+    & df_clean["finished_at"].notna()
+    & df_clean["raw_duration_hours"].gt(0)
+].copy()
+
+oblast_clean["started_local"] = (
+    oblast_clean["started_at"]
+    .dt.tz_convert(LOCAL_TZ)
+)
+
+oblast_clean["finished_local"] = (
+    oblast_clean["finished_at"]
+    .dt.tz_convert(LOCAL_TZ)
+)
+
+oblast_clean = oblast_clean.loc[
+    oblast_clean["started_local"] < ANALYSIS_CUTOFF
+].copy()
+
+# Clip any alert extending beyond the analysis cutoff
+oblast_clean["analysis_finish_local"] = (
+    oblast_clean["finished_local"]
+    .where(
+        oblast_clean["finished_local"] < ANALYSIS_CUTOFF,
+        ANALYSIS_CUTOFF
+    )
+)
+
+oblast_clean = oblast_clean.loc[
+    oblast_clean["analysis_finish_local"]
+    > oblast_clean["started_local"]
+].copy()
+
+oblast_clean["duration_hours"] = (
+    oblast_clean["analysis_finish_local"]
+    - oblast_clean["started_local"]
+).dt.total_seconds() / 3600
+
+# Monday containing the alert start
+oblast_clean["start_week"] = (
+    oblast_clean["started_local"].dt.normalize()
+    - pd.to_timedelta(
+        oblast_clean["started_local"].dt.weekday,
+        unit="D"
+    )
+)
+
+oblast_clean = (
+    oblast_clean
+    .sort_values(["started_local", "oblast"])
+    .reset_index(drop=True)
+)
+
+
+# ------------------------------------------------------------
+# 4. Weekly alert frequency
+# ------------------------------------------------------------
+
+weekly_frequency = (
+    oblast_clean
+    .groupby("start_week")
+    .size()
+    .rename("alert_count")
+)
+
+
+# ------------------------------------------------------------
+# 5. Weekly cumulative duration
+# Split alerts across Monday-based weekly boundaries
+# ------------------------------------------------------------
+
+duration_segments = []
+
+for alert in oblast_clean.itertuples(index=False):
+
+    segment_start = alert.started_local
+    alert_end = alert.analysis_finish_local
+
+    while segment_start < alert_end:
+
+        week_start = (
+            segment_start.normalize()
+            - pd.Timedelta(days=segment_start.weekday())
+        )
+
+        next_week_start = week_start + pd.DateOffset(weeks=1)
+        segment_end = min(alert_end, next_week_start)
+
+        segment_hours = (
+            segment_end - segment_start
+        ).total_seconds() / 3600
+
+        duration_segments.append(
+            {
+                "week_start": week_start,
+                "alert_hours": segment_hours,
+            }
+        )
+
+        segment_start = segment_end
+
+duration_segments = pd.DataFrame(duration_segments)
+
+weekly_duration = (
+    duration_segments
+    .groupby("week_start")["alert_hours"]
+    .sum()
+)
+
+
+# ------------------------------------------------------------
+# 6. Create the continuous weekly table
+# ------------------------------------------------------------
+
+first_week = min(
+    weekly_frequency.index.min(),
+    weekly_duration.index.min()
+)
+
+last_included_time = (
+    ANALYSIS_CUTOFF - pd.Timedelta(nanoseconds=1)
+)
+
+last_week = (
+    last_included_time.normalize()
+    - pd.Timedelta(days=last_included_time.weekday())
+)
+
+complete_week_index = pd.date_range(
+    start=first_week,
+    end=last_week,
+    freq="W-MON"
+)
+
+weekly_oblast = (
+    pd.concat(
+        [weekly_frequency, weekly_duration],
+        axis=1
+    )
+    .reindex(complete_week_index, fill_value=0)
+    .rename_axis("week_start")
+    .reset_index()
+)
+
+weekly_oblast["week_end"] = (
+    weekly_oblast["week_start"]
+    + pd.DateOffset(weeks=1)
+)
+
+analysis_start = oblast_clean["started_local"].min()
+
+weekly_oblast["is_complete_week"] = (
+    weekly_oblast["week_start"].ge(analysis_start)
+    & weekly_oblast["week_end"].le(ANALYSIS_CUTOFF)
+)
+
+weekly_oblast["alert_count"] = (
+    weekly_oblast["alert_count"].astype(int)
+)
+
+weekly_complete = (
+    weekly_oblast.loc[
+        weekly_oblast["is_complete_week"]
+    ]
+    .sort_values("week_start")
+    .copy()
+)
+
+first_complete_week_start = (
+    weekly_complete["week_start"].min()
+)
+
+final_complete_week_end = (
+    weekly_complete["week_end"].max()
+)
+
+
+# ------------------------------------------------------------
+# 7. Full oblast ranking
+# ------------------------------------------------------------
+
+oblast_ranking = (
+    oblast_clean
+    .groupby("oblast", as_index=False)["duration_hours"]
+    .sum()
+    .rename(
+        columns={
+            "duration_hours": "cumulative_alert_hours"
+        }
+    )
+    .sort_values(
+        "cumulative_alert_hours",
+        ascending=False
+    )
+    .reset_index(drop=True)
+)
+
+oblast_ranking.insert(
+    0,
+    "rank",
+    range(1, len(oblast_ranking) + 1)
+)
+
+top10_oblasts = oblast_ranking.head(10).copy()
+
+top10_oblasts["plot_label"] = (
+    top10_oblasts["oblast"]
+    .str.replace(" oblast", "", regex=False)
+)
+
+
+# ------------------------------------------------------------
+# 8. Export tables
+# ------------------------------------------------------------
+
+weekly_oblast.to_csv(
+    OUTPUTS_DIR / "weekly_oblast_metrics.csv",
+    index=False
+)
+
+oblast_ranking.to_csv(
+    OUTPUTS_DIR / "oblast_cumulative_alert_hours.csv",
+    index=False
+)
+
+
+# ------------------------------------------------------------
+# 9. Figure: weekly alert count
+# ------------------------------------------------------------
+
+fig, ax = plt.subplots(figsize=(13, 5))
+
+ax.plot(
+    weekly_complete["week_start"],
+    weekly_complete["alert_count"],
+    linewidth=1.5
+)
+
+ax.set_xlim(
+    first_complete_week_start,
+    final_complete_week_end
+)
+
+ax.set_title(
+    "Weekly Number of Oblast-Level Air-Raid Alert Records"
+)
+ax.set_xlabel("Week")
+ax.set_ylabel("Number of alert records")
+ax.grid(axis="y", alpha=0.3)
+
+fig.tight_layout()
+
+fig.savefig(
+    FIGURES_DIR / "weekly_oblast_alert_count.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+plt.close(fig)
+
+
+# ------------------------------------------------------------
+# 10. Figure: weekly cumulative alert hours
+# ------------------------------------------------------------
+
+fig, ax = plt.subplots(figsize=(13, 5))
+
+ax.plot(
+    weekly_complete["week_start"],
+    weekly_complete["alert_hours"],
+    linewidth=1.5
+)
+
+ax.set_xlim(
+    first_complete_week_start,
+    final_complete_week_end
+)
+
+ax.set_title(
+    "Weekly Cumulative Duration of Oblast-Level Air-Raid Alerts"
+)
+ax.set_xlabel("Week")
+ax.set_ylabel("Cumulative oblast-alert hours")
+ax.grid(axis="y", alpha=0.3)
+
+fig.tight_layout()
+
+fig.savefig(
+    FIGURES_DIR / "weekly_oblast_alert_hours.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+plt.close(fig)
+
+
+# ------------------------------------------------------------
+# 11. Figure: top ten oblasts
+# ------------------------------------------------------------
+
+plot_data = top10_oblasts.sort_values(
+    "cumulative_alert_hours",
+    ascending=True
+)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+bars = ax.barh(
+    plot_data["plot_label"],
+    plot_data["cumulative_alert_hours"]
+)
+
+maximum_hours = (
+    plot_data["cumulative_alert_hours"].max()
+)
+
+ax.set_xlim(0, maximum_hours * 1.12)
+
+ax.set_title(
+    "Top Ten Oblasts by Cumulative Air-Raid Alert Duration"
+)
+ax.set_xlabel("Cumulative alert hours")
+ax.set_ylabel("Oblast")
+ax.grid(axis="x", alpha=0.3)
+
+ax.bar_label(
+    bars,
+    labels=[
+        f"{value:,.0f}"
+        for value in plot_data["cumulative_alert_hours"]
+    ],
+    padding=3
+)
+
+fig.tight_layout()
+
+fig.savefig(
+    FIGURES_DIR
+    / "top10_oblasts_cumulative_alert_hours.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+plt.close(fig)
+
+
+# ------------------------------------------------------------
+# 12. Display created files and sizes
+# ------------------------------------------------------------
+
+created_files = [
+    FIGURES_DIR / "weekly_oblast_alert_count.png",
+    FIGURES_DIR / "weekly_oblast_alert_hours.png",
+    FIGURES_DIR / "top10_oblasts_cumulative_alert_hours.png",
+    OUTPUTS_DIR / "weekly_oblast_metrics.csv",
+    OUTPUTS_DIR / "oblast_cumulative_alert_hours.csv",
+]
+
+def format_file_size(size_bytes):
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    if size_bytes < 1024**2:
+        return f"{size_bytes / 1024:.1f} KB"
+    return f"{size_bytes / 1024**2:.2f} MB"
+
+
+print("\nCREATED FILES")
+
+for file_path in created_files:
+    print(
+        f"{file_path.as_posix():55s} "
+        f"{format_file_size(file_path.stat().st_size)}"
+    )
+yayy it worked 
+Can you check my repository for any submission critical issue https://github.com/nataliiakubik/air-raid-alerts-time-series
+Думал на протяжении 2m 17s
+
+Yayy. I checked the current main branch. The analysis itself looks submission-ready, and the committed outputs are internally consistent: 177 weekly rows with 175 complete weeks and two flagged partial weeks, plus a 25-unit oblast ranking. The corrected figures use the intended date range, and the Donetska label now has enough space.
+
+Fix before submission
+1. Rename the notebook and Python file
+
+The README says the repository contains:
+
+air_raid_alerts_analysis.ipynb
+air_raid_alerts_analysis.py
+
+But the actual files are:
+
+Copy_of_air_raid_alerts_analysis.ipynb
+copy_of_air_raid_alerts_analysis.py
+
+Therefore, the README’s “How to run” instruction currently points to a filename that does not exist. This is the clearest submission-critical issue.
+
+Rename them to match the README:
+
+git mv Copy_of_air_raid_alerts_analysis.ipynb air_raid_alerts_analysis.ipynb
+git mv copy_of_air_raid_alerts_analysis.py air_raid_alerts_analysis.py
+2. Remove the superseded plotting block
+
+The notebook/script currently contains an earlier FINAL RESULTS block that creates the original figures without the corrected x-axis limits and bar-label margin, followed later by the self-contained corrected export block. Consequently, Run all executes two versions of the final analysis and displays both old and corrected figures.
+
+Keep only the corrected plotting/export implementation. At minimum, delete the earlier block beginning with:
+
+# FINAL RESULTS
+# 1. Weekly oblast-level alert count
+
+and ending after:
+
+print("3. top10_oblasts_cumulative_alert_hours.png")
+
+The final self-contained export block already recreates the three corrected figures and CSV files.
+
+3. Decide whether the .py file is intended to be runnable
+
+The exported Python script imports:
+
+from IPython.display import display
+
+but requirements.txt lists only pandas and matplotlib. A clean non-Colab environment may therefore fail when running the script, even though the notebook works in Colab.
+
+Either:
+
+add ipython to requirements.txt, or
+remove the .py file if the notebook is the official submission deliverable.
+
+Adding it is the safer quick fix:
+
+pandas
+matplotlib
+ipython
+Strongly recommended presentation fixes
+
+Your README’s Figures section currently contains only three captions, not the images themselves. Since the PNG files are already committed, embedding them would make the project immediately understandable to reviewers.
+
+### Figures
+
+#### Weekly alert frequency
+
+![Weekly oblast-level alert frequency](figures/weekly_oblast_alert_count.png)
+
+#### Weekly cumulative alert duration
+
+![Weekly cumulative oblast-alert hours](figures/weekly_oblast_alert_hours.png)
+
+#### Oblasts with the greatest cumulative alert duration
+
+![Top ten oblasts by cumulative alert duration](figures/top10_oblasts_cumulative_alert_hours.png)
+
+Also make the dataset name in the Data Source section a clickable reference to the original repository. The upstream dataset is updated daily, so for stronger reproducibility, add the date on which the data were retrieved; ideally, pin the source URL to a specific upstream commit.
+
+Suggested sentence:
+
+Data were retrieved on 25 June 2026. The analysis uses a fixed cutoff of 1 August 2025, but the upstream source is actively updated.
+
+What is already good
+The research question is focused and matches the outputs.
+The duplicate-removal and geographic-level decisions are documented.
+The figures and CSV outputs are committed.
+The conclusions distinguish recorded alert burden from attacks or objective danger.
+The comparison between frequency and duration avoids claiming that mean duration increased.
+AI use is transparently disclosed.
+
+Minimum submission checklist: rename the two files, remove the obsolete plotting block, and either add ipython or remove the Python export. After those changes, I do not see another obvious submission blocker.
