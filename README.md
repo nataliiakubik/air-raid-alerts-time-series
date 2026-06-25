@@ -24,7 +24,7 @@ The analysis was completed in Python using Google Colab.
 
 
 
-The project uses the public official\_data\_en.csv file from the Ukrainian Air Raid Sirens Dataset.
+The project uses the public `official_data_en.csv` file from the [Ukrainian Air Raid Sirens Dataset](https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset). Data were retrieved on 25 June 2026. The upstream dataset is actively updated, while this analysis applies a fixed cutoff of 1 August 2025.
 
 
 
@@ -142,14 +142,19 @@ Donetska oblast had the greatest recorded cumulative alert duration, followed by
 
 
 
-###### **Figures**
+## Figures
 
-Weekly alert frequency
+### Weekly alert frequency
 
-Weekly cumulative alert duration
+![Weekly oblast-level alert frequency](figures/weekly_oblast_alert_count.png)
 
-Oblasts with the greatest cumulative alert duration
+### Weekly cumulative alert duration
 
+![Weekly cumulative oblast-alert hours](figures/weekly_oblast_alert_hours.png)
+
+### Oblasts with the greatest cumulative alert duration
+
+![Top ten oblasts by cumulative alert duration](figures/top10_oblasts_cumulative_alert_hours.png)
 
 
 
